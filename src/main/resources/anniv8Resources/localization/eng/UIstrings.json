@@ -19,6 +19,15 @@
       "Pick up Quest",
       "You can select ",
       " more quest(s)"
+      ]
+  },
+  "${ModID}:QuestReward": {
+    "TEXT": [
+      "Gain %d Gold.",
+      "Obtain %s.",
+      "a random Common relic",
+      "a random Uncommon relic",
+      "a random Rare relic"
     ]
   }
 }

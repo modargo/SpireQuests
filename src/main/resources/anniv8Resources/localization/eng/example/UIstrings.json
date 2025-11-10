@@ -1,5 +1,5 @@
 {
-  "${ModID}:TESTQUEST": {
+  "${ModID}:TestQuest": {
     "TEXT": [
       "THE QUEST",
       "THE DESCRIPTION",

@@ -2,8 +2,8 @@ package spireQuests.quests;
 
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.localization.UIStrings;
+import spireQuests.Anniv8Mod;
 
-import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +11,8 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static spireQuests.Anniv8Mod.makeID;
 
 public abstract class AbstractQuest implements Comparable<AbstractQuest> {
     public enum QuestType {
@@ -32,6 +34,9 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
     public String name;
     public String description;
     public String author;
+
+    public boolean useDefaultReward;
+    public List<QuestReward> questRewards;
 
     private int trackerTextIndex = 0;
 
@@ -60,10 +65,13 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
     new TriggerTracker<>(QuestTriggers.ADD_CARD, 1).hide().add(this)
             .before(new TriggerTracker<>(QuestTriggers.REMOVE_CARD, 1)).add(this);*/
 
-    public AbstractQuest(String id, QuestType type, QuestDifficulty difficulty) {
-        this.id = id;
+    public AbstractQuest(QuestType type, QuestDifficulty difficulty) {
+        this.id = makeID(getClass().getSimpleName()); //makeID is used because the strings exist in UIStrings
         this.type = type;
         this.difficulty = difficulty;
+
+        useDefaultReward = true;
+        questRewards = new ArrayList<>();
 
         trackers = new ArrayList<>();
         triggers = new ArrayList<>();
@@ -97,7 +105,7 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
      * @param questTracker
      * @return
      */
-    protected Tracker addTracker(Tracker questTracker) {
+    protected final Tracker addTracker(Tracker questTracker) {
         trackers.add(questTracker);
 
         if (!questTracker.hidden) {
@@ -114,11 +122,23 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
         return questTracker;
     }
 
+    protected final AbstractQuest addReward(QuestReward reward) {
+        useDefaultReward = false;
+
+        questRewards.add(reward);
+
+        return this;
+    }
+
     public boolean complete() {
         for (Tracker tracker : trackers) {
             if (!tracker.isComplete()) return false;
         }
         return true;
+    }
+
+    public void update() {
+
     }
 
     public void onStart() {
@@ -137,18 +157,49 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
         }
     }
 
-    public void update() {
-
+    public void refreshState() {
+        for (Tracker t : trackers) {
+            t.refreshState();
+        }
     }
 
+    public void loadSave(String[] questData) {
+        for (int i = 0; i < questData.length; ++i) {
+            if (i >= trackers.size()) {
+                Anniv8Mod.logger.warn("Saved tracker data for quest " + id + " does not match tracker count");
+            }
+            trackers.get(i).loadData(questData[i]);
+        }
+    }
+
+    public String[] trackerSaves() {
+        String[] data = new String[trackers.size()];
+        for (int i = 0; i < data.length; ++i) {
+            data[i] = trackers.get(i).saveData();
+        }
+        return data;
+    }
+    public QuestReward.QuestRewardSave[] rewardSaves() {
+        QuestReward.QuestRewardSave[] rewardSaves = new QuestReward.QuestRewardSave[questRewards.size()];
+        for (int i = 0; i < rewardSaves.length; ++i) {
+            rewardSaves[i] = questRewards.get(i).getSave();
+        }
+        return rewardSaves;
+    }
 
     //instances of quests are registered, makeCopy is used to get the one to provide to the player
     public AbstractQuest makeCopy() {
+        AbstractQuest quest;
         try {
-            return this.getClass().getDeclaredConstructor().newInstance();
+            quest = this.getClass().getDeclaredConstructor().newInstance();
         } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
             throw new RuntimeException("Failed to auto-generate makeCopy for quest " + getClass().getName(), e);
         }
+
+        if (quest.useDefaultReward) {
+            //TODO: default reward roll
+        }
+        return quest;
     }
 
     @Override
@@ -266,6 +317,20 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
         public final Tracker add(AbstractQuest quest) {
             return quest.addTracker(this);
         }
+
+        public String saveData() {
+            return null;
+        }
+
+        /**
+         * Called upon loading save, to ensure quest displays an accurate state
+         */
+        public void refreshState() {
+
+        }
+
+        public void loadData(String data) {
+        }
     }
 
     /**
@@ -318,7 +383,7 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
     /**
      * A tracker that requires a trigger to occur a certain number of times.
      * Adding a condition causes the tracker to not being tracking until it is fulfilled.
-     * Can also add a
+     * A reset trigger can be added to set the count back to 0
      */
     public static class TriggerTracker<T> extends Tracker {
         private final int targetCount;
@@ -367,6 +432,21 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
         public String progressString() {
             return String.format(" (%d/%d)", count, targetCount);
         }
+
+        @Override
+        public String saveData() {
+            return String.valueOf(count);
+        }
+
+        @Override
+        public void loadData(String data) {
+            try {
+                count = Integer.parseInt(data);
+            }
+            catch (Exception e) {
+                Anniv8Mod.logger.error("Failed to load tracker data for '" + text + "'", e);
+            }
+        }
     }
 
     /**
@@ -393,7 +473,7 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
         }
 
         public void trigger(U param) {
-            state = getState.get();
+            refreshState();
         }
 
         @Override
@@ -414,6 +494,54 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
         @Override
         public String progressString() {
             return String.format(" (%s/%s)", state, target);
+        }
+
+        @Override
+        public String saveData() {
+            return String.valueOf(state);
+        }
+
+        @Override
+        public void refreshState() {
+            state = getState.get();
+        }
+    }
+
+    /**
+     * A tracker that defaults to a hidden complete state, used to run code when a trigger occurs.
+     */
+    public static class TriggerEvent<T> extends Tracker {
+        private int triggerCount;
+
+        public TriggerEvent(Trigger<T> trigger, Consumer<T> onTrigger) {
+            this(trigger, onTrigger, -1);
+        }
+
+        /**
+         * Runs code when a trigger occurs. If trigger count is omitted it will trigger any number of times.
+         * @param trigger
+         * @param onTrigger
+         * @param triggerCount
+         */
+        public TriggerEvent(Trigger<T> trigger, Consumer<T> onTrigger, int triggerCount) {
+            this.triggerCount = triggerCount;
+            setTrigger(trigger, (param)->{
+                if (this.triggerCount != 0) {
+                    --this.triggerCount; //theoretically this limits the triggers of "infinite" to like 2 billion
+                    onTrigger.accept(param);
+                }
+            });
+            hide();
+        }
+
+        @Override
+        public boolean isComplete() {
+            return true;
+        }
+
+        @Override
+        public String progressString() {
+            return "";
         }
     }
 }

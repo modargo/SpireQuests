@@ -71,8 +71,12 @@ public class QuestUI {
 
         for (AbstractQuest quest : quests) {
             yPos -= LARGE_SPACING;
-            float rewardOffset = 50; //arbitrary temp
+            float rewardOffset = 34 * quest.questRewards.size() + 8;
             FontHelper.renderFontRightAligned(sb, largeFont, quest.name, xPos - rewardOffset, yPos - SMALL_SPACING * 0.5f, quest.complete() ? Settings.GOLD_COLOR : Color.WHITE);
+
+            for (int i = 0; i < quest.questRewards.size(); ++i) {
+                sb.draw(quest.questRewards.get(i).icon(), xPos - (32 * (quest.questRewards.size() - i)), yPos - SMALL_SPACING, 32, 32);
+            }
 
             for (AbstractQuest.Tracker tracker : quest.trackers) {
                 if (tracker.hidden()) continue;

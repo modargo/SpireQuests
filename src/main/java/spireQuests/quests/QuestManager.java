@@ -1,6 +1,8 @@
 package spireQuests.quests;
 
 import basemod.AutoAdd;
+import basemod.BaseMod;
+import basemod.abstracts.CustomSavable;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static spireQuests.Anniv8Mod.makeID;
 import static spireQuests.Anniv8Mod.modID;
 
 @SpirePatch(
@@ -29,10 +32,30 @@ public class QuestManager {
         return quests;
     });
 
+    //Called once in postInitialize
     public static void initialize() {
         new AutoAdd(modID)
             .packageFilter(Anniv8Mod.class)
             .any(AbstractQuest.class, QuestManager::registerQuest);
+
+        BaseMod.addSaveField(makeID("QuestManager"), new CustomSavable<QuestSave>() {
+            @Override
+            public QuestSave onSave() {
+                return new QuestSave(quests());
+            }
+
+            @Override
+            public void onLoad(QuestSave questSave) {
+                if (questSave == null) return;
+
+                for (int i = 0; i < questSave.questIds.length; ++i) {
+                    AbstractQuest quest = getQuest(questSave.questIds[i]);
+                    if (quest == null) continue;
+                    quest.refreshState();
+                    quest.loadSave(questSave.questData[i]);
+                }
+            }
+        });
     }
 
     private static void registerQuest(AutoAdd.Info info, AbstractQuest quest) {
@@ -43,7 +66,12 @@ public class QuestManager {
     }
 
     public static AbstractQuest getQuest(String id) {
-        return quests.get(id).makeCopy();
+        AbstractQuest quest = quests.get(id);
+        if (quest == null) {
+            Anniv8Mod.logger.error("Quest not found: " + id);
+            return null;
+        }
+        return quest.makeCopy();
     }
 
     public static List<AbstractQuest> quests() {
