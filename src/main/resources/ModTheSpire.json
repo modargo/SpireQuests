@@ -6,7 +6,8 @@
     "(Gk) erasels",
     "Mindbomber",
     "Alchyr",
-    "Pandemonium"
+    "Pandemonium",
+    "Darkglade"
   ],
   "description": "${project.description}",
   "version": "${project.version}",
