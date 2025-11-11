@@ -36,6 +36,9 @@ public class QuestBoardProp {
         this.quests.add(new TestQuest());
         this.quests.add(new TestQuest());
         this.quests.add(new TestQuest());
+        for (AbstractQuest quest : quests) {
+            quest.setCost();
+        }
         numQuestsPickable = 2;
         this.sprite = TexLoader.getTexture(questBoardPropImagePath);
         this.hb = new Hitbox(sprite.getWidth() * Settings.xScale, sprite.getHeight() * Settings.yScale);

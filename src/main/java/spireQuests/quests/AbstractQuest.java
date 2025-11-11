@@ -1,6 +1,7 @@
 package spireQuests.quests;
 
 import com.megacrit.cardcrawl.core.CardCrawlGame;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.localization.UIStrings;
 import spireQuests.Anniv8Mod;
 
@@ -43,6 +44,14 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
     public List<Tracker> trackers;
     protected List<Consumer<Trigger<?>>> triggers;
 
+    private static final int HP_COST_MIN_RANGE = 4;
+    private static final int HP_COST_MAX_RANGE = 8;
+    private static final int GOLD_COST_MIN_RANGE = 15;
+    private static final int GOLD_COST_MAX_RANGE = 25;
+    public int hpCost;
+    public int goldCost;
+    public boolean usingGoldCost;
+
     /*
     examples of how trackers would be added in the constructor of a quest
     addTracker(new PassiveTracker<>(() -> AbstractDungeon.player.currentHealth, 1));
@@ -81,6 +90,20 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
             throw new RuntimeException("Localization for the quest " + id + " not found!");
         }
         setText();
+    }
+
+    public void setCost() {
+        this.hpCost = AbstractDungeon.miscRng.random(HP_COST_MIN_RANGE, HP_COST_MAX_RANGE);
+        this.goldCost = AbstractDungeon.miscRng.random(GOLD_COST_MIN_RANGE, GOLD_COST_MAX_RANGE);
+        this.usingGoldCost = AbstractDungeon.miscRng.randomBoolean();
+    }
+
+    public int getCost() {
+        if (usingGoldCost) {
+            return goldCost;
+        } else {
+            return hpCost;
+        }
     }
 
     //override if you want to set up the text differently

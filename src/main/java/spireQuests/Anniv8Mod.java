@@ -15,6 +15,7 @@ import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
 import com.google.gson.Gson;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.localization.*;
 import com.megacrit.cardcrawl.unlock.UnlockTracker;
 import javassist.CtClass;
@@ -344,6 +345,10 @@ public class Anniv8Mod implements
     @Override
     public void receiveStartGame() {
 
+    }
+
+    public static boolean questsHaveCost() {
+        return AbstractDungeon.floorNum > 1;
     }
 
 }
