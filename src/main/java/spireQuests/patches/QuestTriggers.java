@@ -4,6 +4,7 @@ import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.actions.utility.UseCardAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.CardGroup;
+import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
@@ -20,6 +21,7 @@ public class QuestTriggers {
     public static final Trigger<MapRoomNode> ENTER_ROOM = new Trigger<>();
     public static final Trigger<MapRoomNode> LEAVE_ROOM = new Trigger<>();
     public static final Trigger<AbstractCard> PLAY_CARD = new Trigger<>();
+    public static final Trigger<Integer> DAMAGE_TAKEN = new Trigger<>();
 
     private static boolean disabled() {
         return CardCrawlGame.mode != CardCrawlGame.GameMode.GAMEPLAY;
@@ -97,6 +99,24 @@ public class QuestTriggers {
             if (disabled()) return;
 
             PLAY_CARD.trigger(card);
+        }
+    }
+
+    @SpirePatch(clz = AbstractPlayer.class, method = "damage")
+    public static class OnTakeDamage {
+        @SpireInsertPatch(locator = DamageLocator.class, localvars = {"damageAmount"})
+        public static void onDamage(AbstractPlayer __instance, DamageInfo info, int damageAmount) {
+            if (disabled()) return;
+
+            DAMAGE_TAKEN.trigger(damageAmount);
+        }
+
+        private static class DamageLocator extends SpireInsertLocator {
+            @Override
+            public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+                Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractDungeon.class, "effectList");
+                return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+            }
         }
     }
 
