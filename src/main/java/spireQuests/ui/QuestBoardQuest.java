@@ -45,6 +45,8 @@ public class QuestBoardQuest {
             FontHelper.renderFontCentered(sb, FontHelper.losePowerFont, this.quest.name, this.x + 260.0F * Settings.xScale, this.y + 340.0F * Settings.yScale + boardY, Color.WHITE, 1.2f);
             this.hb.move(this.x + 5.0F * Settings.xScale + (512.0F / 2) * Settings.xScale, this.y - 445.0F * Settings.yScale + boardY + (256.0F / 2) * Settings.yScale);
             this.previewHb.move(this.x + (512.0F / 2) * Settings.xScale, this.y - 350.0F * Settings.yScale + boardY + (716.0F / 2) * Settings.yScale);
+            this.hb.render(sb);
+            this.previewHb.render(sb);
             if (QuestBoardScreen.parentProp.numQuestsPickable <= 0) {
                 sb.setColor(Color.GRAY.cpy());
             } else if (this.hb.hovered) {
