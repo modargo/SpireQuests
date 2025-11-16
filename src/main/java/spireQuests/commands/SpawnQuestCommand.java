@@ -19,14 +19,13 @@ public class SpawnQuestCommand extends ConsoleCommand {
     public SpawnQuestCommand() {
         minExtraTokens = 2;
         maxExtraTokens = 2;
-        simpleCheck = true;
         requiresPlayer = true;
     }
 
     @Override
     protected void execute(String[] tokens, int depth) {
         if (tokens.length != 3) {
-            DevConsole.log("Specify the id of the quest to add to your quest log");
+            DevConsole.log("Specify the slot of the quest on the board and the id of the quest to spawn");
             return;
         }
 
@@ -79,5 +78,12 @@ public class SpawnQuestCommand extends ConsoleCommand {
         }
 
         return result;
+    }
+
+    @Override
+    public void errorMsg() {
+        DevConsole.couldNotParse();
+        DevConsole.log("syntax is: spawnquest [slot] [id]");
+        DevConsole.log("* slot is from 0 to 2");
     }
 }
