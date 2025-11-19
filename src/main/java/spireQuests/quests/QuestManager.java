@@ -57,7 +57,7 @@ public class QuestManager {
                     AbstractQuest quest = getQuest(questSave.questIds[i]);
                     if (quest == null) continue;
                     quest.refreshState();
-                    quest.loadSave(questSave.questData[i]);
+                    quest.loadSave(questSave.questData[i], questSave.questRewards[i]);
                     currentQuests.get(AbstractDungeon.player).add(quest);
                 }
             }
