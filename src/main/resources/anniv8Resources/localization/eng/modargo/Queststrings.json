@@ -87,5 +87,13 @@
     "TRACKER_TEXT": [
       "Devil slain"
     ]
+  },
+  "${ModID}:BiomeSamplerQuest": {
+    "TITLE": "Biome Sampler",
+    "DESCRIPTION": "Enter a biome 5 times.",
+    "AUTHOR": "modargo",
+    "TRACKER_TEXT": [
+      "Biomes entered"
+    ]
   }
 }
