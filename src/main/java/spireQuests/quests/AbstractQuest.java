@@ -192,6 +192,7 @@ public abstract class AbstractQuest implements Comparable<AbstractQuest> {
                 throw new RuntimeException("Quest " + id + " needs more entries in TRACKER_TEXT for its trackers");
             }
             questTracker.text = questStrings.TRACKER_TEXT[trackerTextIndex];
+            trackerTextIndex++;
         }
 
         if (questTracker.trigger != null) triggers.add(questTracker.trigger);
