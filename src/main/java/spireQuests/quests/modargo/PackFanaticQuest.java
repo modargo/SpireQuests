@@ -44,8 +44,7 @@ public class PackFanaticQuest extends AbstractQuest {
             return (int)deckPackIDs.stream().filter(poolPackIDs::contains).count();
         }).add(this);
 
-        addReward(new QuestReward.CardReward(new PerfectlyPacked()));
-        addReward(new QuestReward.CardReward(new PerfectlyPacked()));
+        addReward(new QuestReward.CardReward(new PerfectlyPacked(), 2));
     }
 
     @Override

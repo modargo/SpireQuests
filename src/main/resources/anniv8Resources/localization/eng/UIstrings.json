@@ -39,6 +39,7 @@
     "TEXT": [
       "Gain #b%d #yGold.",
       "Obtain %s.",
+      "Obtain %d %s.",
       "a random Common relic",
       "a random Uncommon relic",
       "a random Rare relic",

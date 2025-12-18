@@ -208,18 +208,18 @@ public abstract class QuestReward {
         private static String text(AbstractRelic.RelicTier tier) {
             String relicTier;
             if (tier == null) {
-                relicTier = TEXT[5];
+                relicTier = TEXT[6];
             }
             else {
                 switch (tier) {
                     case COMMON:
-                        relicTier = TEXT[2];
-                        break;
-                    case UNCOMMON:
                         relicTier = TEXT[3];
                         break;
-                    default:
+                    case UNCOMMON:
                         relicTier = TEXT[4];
+                        break;
+                    default:
+                        relicTier = TEXT[5];
                         break;
                 }
             }
@@ -275,10 +275,21 @@ public abstract class QuestReward {
     public static class CardReward extends QuestReward {
         private static final TextureRegion IMG = TexLoader.getTextureAsAtlasRegion(makeUIPath("card_reward.png"));
         private final AbstractCard card;
+        private final int amount;
 
         public CardReward(AbstractCard card) {
-            super(String.format(TEXT[1], FontHelper.colorString(card.name, "y")));
+            this(card, 1);
+        }
+
+        public CardReward(AbstractCard card, int amount) {
+            super(getText(card, amount));
             this.card = card;
+            this.amount = amount;
+        }
+
+        private static String getText(AbstractCard card, int amount) {
+            String cardName = FontHelper.colorString(card.name, "y");
+            return amount == 1 ? String.format(TEXT[1], cardName) : String.format(TEXT[2], amount, cardName);
         }
 
         @Override
@@ -293,18 +304,25 @@ public abstract class QuestReward {
 
         @Override
         public void obtainRewardItem() {
-            AbstractDungeon.combatRewardScreen.rewards.add(0, new SingleCardReward(card));
+            for (int i = 0; i < this.amount; i++) {
+                AbstractDungeon.combatRewardScreen.rewards.add(0, new SingleCardReward(card));
+            }
             AbstractDungeon.combatRewardScreen.positionRewards();
         }
 
         @Override
         public void obtainInstant() {
-            AbstractDungeon.effectList.add(new ShowCardAndObtainEffect(card, Settings.WIDTH / 2.0F, Settings.HEIGHT / 2.0F));
+            int half = this.amount / 2;
+            float spacing = 150.0F;
+            float startX = Settings.WIDTH / 2.0F - spacing * half;
+            for (int i = 0; i < this.amount; i++) {
+                AbstractDungeon.effectList.add(new ShowCardAndObtainEffect(card, startX + (i - 1) * spacing, Settings.HEIGHT / 2.0F));
+            }
         }
 
         @Override
         protected String saveParam() {
-            return card.cardID;
+            return this.amount + "";
         }
 
         @Override
@@ -315,7 +333,15 @@ public abstract class QuestReward {
         public static CardReward fromSave(QuestRewardSave save) {
             CardSave s = save.card;
             AbstractCard loaded = CardLibrary.getCopy(s.id, s.upgrades, s.misc);
-            return new CardReward(loaded);
+            int amount;
+            try {
+                amount = Integer.parseInt(save.param, 10);
+            } catch (NumberFormatException e) {
+                Anniv8Mod.logger.error("Couldn't parse amount from saved CardReward", e);
+                amount = 1;
+            }
+
+            return new CardReward(loaded, amount);
         }
 
         public AbstractCard getCard() {
@@ -328,7 +354,7 @@ public abstract class QuestReward {
         private final int amount;
 
         public MaxHPReward(int amount) {
-            super(String.format(TEXT[6], amount));
+            super(String.format(TEXT[7], amount));
             this.amount = amount;
         }
 
